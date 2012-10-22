@@ -129,9 +129,9 @@
 			$settings = $context['settings'];
 
 			// Active Section
-			Symphony::Configuration()->set('production-customer-id', $settings['paypal']['api-username'], 'paypal');
-			Symphony::Configuration()->set('production-merchant-id', $settings['paypal']['api-password'], 'paypal');
-			Symphony::Configuration()->set('production-merchant-password', $settings['paypal']['api-signature'], 'paypal');
+			Symphony::Configuration()->set('api-username', $settings['paypal']['api-username'], 'paypal');
+			Symphony::Configuration()->set('api-password', $settings['paypal']['api-password'], 'paypal');
+			Symphony::Configuration()->set('api-signature', $settings['paypal']['api-signature'], 'paypal');
 			Symphony::Configuration()->set('gateway-mode', $settings['paypal']['gateway-mode'], 'paypal');
 
 			Administration::instance()->saveConfig();
