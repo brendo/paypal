@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension id="eway" status="released" xmlns="http://symphony-cms.com/schemas/extension/1.0">
+	<name>Paypal</name>
+	<description>Add to the SymphonyCMS details to the Paypal Account</description>
+	<repo type="github">https://github.com/abocati/paypal</repo>
+	<types>
+		<type>Workflow</type>
+	</types>
+	<authors>
+		<author>
+			<name github="abocati" symphony="abocati">Andre Bocati</name>
+			<website></website>
+		</author>
+	</authors>
+	<releases>
+		<release version="0.1" date="2012-10-22" min="2.3">
+			- Symphony 2.3 compatibility
+		</release>
+	</releases>
+</extension>

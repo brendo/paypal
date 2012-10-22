@@ -1,4 +1,4 @@
-paypal
+Paypal
 ======
 
-paypal
+Add Paypal fields to the SymphonyCMS System Preferences.
