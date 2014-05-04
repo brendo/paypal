@@ -1,5 +1,8 @@
 <?php
-	Class extension_Paypal extends Extension {
+
+	require_once EXTENSIONS . '/paypal/lib/paypal.php';
+
+	Class extension_PayPal extends Extension {
 
 		public static $config_handle = 'paypal';
 
@@ -22,10 +25,13 @@
 		Utilities:
 	-------------------------------------------------------------------------*/
 
-		public function getSetting($key) {
+		public static function getSetting($key) {
 			return Symphony::Configuration()->get($key, self::$config_handle);
 		}
 
+		public static function isTesting() {
+			return self::getSetting('gateway-mode') !== 'live';
+		}
 
 	/*-------------------------------------------------------------------------
 		Preferences:
@@ -33,10 +39,10 @@
 
 		public function getPreferencesData() {
 			$data = array(
-				'api-username' => '',
-				'api-password' => '',
-				'api-signature' => '',
-				'gateway-mode' => 'sandbox'
+				'api-client-id' => '',
+				'api-secret' => '',
+				'gateway-mode' => 'sandbox',
+				'currency' => ''
 			);
 
 			foreach ($data as $key => &$value) {
@@ -60,21 +66,21 @@
 
 			$this->buildPreferences($fieldset, array(
 				array(
-					'label' => 'API username',
-					'name' => 'api-username',
-					'value' => $data['api-username'],
+					'label' => 'API Client ID',
+					'name' => 'api-client-id',
+					'value' => $data['api-client-id'],
 					'type' => 'text'
 				),
 				array(
-					'label' => 'API password',
-					'name' => 'api-password',
-					'value' => $data['api-password'],
-					'type' => 'password'
+					'label' => 'API Secret',
+					'name' => 'api-secret',
+					'value' => $data['api-secret'],
+					'type' => 'text'
 				),
 				array(
-					'label' => 'API signature',
-					'name' => 'api-signature',
-					'value' => $data['api-signature'],
+					'label' => 'Currency Code (3 characters)',
+					'name' => 'currency',
+					'value' => $data['currency'],
 					'type' => 'text'
 				)
 			));
@@ -102,23 +108,19 @@
 				$label->appendChild($input);
 				$row->appendChild($label);
 			}
-            
+
 			// Build the Gateway Mode
 			$label = new XMLElement('label', __('Gateway Mode'));
 			$options = array(
 				array('sandbox', $this->isTesting() , __('Sandbox')),
 				array('live',  !$this->isTesting(), __('Live'))
 			);
-            
+
 			$label->appendChild(Widget::Select('settings[paypal][gateway-mode]', $options));
 			$row->appendChild($label);
 
 			$fieldset->appendChild($row);
 		}
-
-		public static function isTesting() {
-			return Symphony::Configuration()->get('gateway-mode', 'paypal') == 'sandbox';
-		}		
 
 		/**
 		 * Saves the Paypal to the configuration
@@ -129,12 +131,12 @@
 			$settings = $context['settings'];
 
 			// Active Section
-			Symphony::Configuration()->set('api-username', $settings['paypal']['api-username'], 'paypal');
-			Symphony::Configuration()->set('api-password', $settings['paypal']['api-password'], 'paypal');
-			Symphony::Configuration()->set('api-signature', $settings['paypal']['api-signature'], 'paypal');
+			Symphony::Configuration()->set('api-username', $settings['paypal']['api-client-id'], 'paypal');
+			Symphony::Configuration()->set('api-password', $settings['paypal']['api-secret'], 'paypal');
 			Symphony::Configuration()->set('gateway-mode', $settings['paypal']['gateway-mode'], 'paypal');
+			Symphony::Configuration()->set('currency', $settings['paypal']['currency'], 'paypal');
 
-			Administration::instance()->saveConfig();
+			Symphony::Configuration()->write();
 		}
 
 	}
