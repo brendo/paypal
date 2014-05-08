@@ -8,6 +8,7 @@
 	use PayPal\Api\Amount;
 	use PayPal\Api\Payer;
 	use PayPal\Api\Payment;
+	use PayPal\Api\PaymentExecution;
 	use PayPal\Api\FundingInstrument;
 	use PayPal\Api\RedirectUrls;
 	use PayPal\Api\Transaction;
@@ -111,7 +112,7 @@
 		 *
 		 * @param Exception $exception
 		 */
-		public static function log(Exception $exception) {
+		public static function log(Exception $exception, $request = null) {
 			// Prefer Symphony Log
 			if(null != Symphony::Log()) {
 				return Symphony::Log()->pushExceptionToLog($exception, true, true, true);
@@ -120,6 +121,38 @@
 			// Otherwise log error to PayPal log
 			$log_date = date('Ymd') . ".txt"; // Format "YEAR MONTH DAY.txt"
 			return General::writeFile(LOGS . "/paypal/" . $log_date, (string)$exception, 'a+');
+		}
+
+		public static function addToEventXML(XMLElement $event_xml, $ex = null) {
+			if(is_null($ex)) return null;
+
+			$event_xml->setAttribute('result', 'error');
+
+			// Pull the data out of the exception
+			if(method_exists($ex, 'getData')) {
+				$error = json_decode($ex->getData());
+				$attributes = array(
+					'type' => $error->name,
+					'debug-id' => $error->debug_id,
+					'message' => $ex->getMessage()
+				);
+				if(isset($error->details)) {
+					$attributes['details'] = $error->details[0]['issue'];
+				}
+
+				// Add to XML;
+				$event_xml->appendChild(
+					new XMLElement('paypal', $error->message, $attributes)
+				);
+			}
+			else {
+				// Add to XML;
+				$event_xml->appendChild(
+					new XMLElement('paypal', $ex->getMessage())
+				);
+			}
+
+			return $event_xml;
 		}
 
 		/**
@@ -210,7 +243,7 @@
 			if(!is_null($sku)) $item->setSku($sku);
 			if(!is_null($name)) $item->setName($name);
 			if(!is_null($quantity)) $item->setQuantity($quantity);
-			if(!is_null($price)) $item->setPrice($price);
+			if(!is_null($price)) $item->setPrice(number_format((float)$price, 2));
 
 			return $item;
 		}
@@ -241,7 +274,9 @@
 		 * @param Payment $payment
 		 * @return string|boolean
 		 */
-		public static function returnApprovalUrl(Payment $payment) {
+		public static function returnApprovalUrl(Payment $payment = null) {
+			if(($payment instanceof Payment) === false) return false;
+
 			// ### Redirect buyer to paypal
 			// Retrieve buyer approval url from the `payment` object.
 			foreach($payment->getLinks() as $link) {
@@ -251,7 +286,7 @@
 					return $redirectUrl;
 				}
 			}
-			
+
 			return false;
 		}
 	
@@ -279,7 +314,7 @@
 			// Let's you specify a payment amount.
 			$amount = new Amount();
 			$amount->setCurrency(self::getConfigValue('currency'));
-			$amount->setTotal($checkout_amount);
+			$amount->setTotal(number_format((float)$checkout_amount, 2));
 
 			// ### Transaction
 			// A transaction defines the contract of a
@@ -309,32 +344,27 @@
 			// The return object contains the status and the
 			// url to which the buyer must be redirected to
 			// for payment approval
-			try {
-				$apiContext = self::createContext();
-				$payment->create($apiContext);
-			} catch (\PPConnectionException $ex) {
-				self::log($ex);
-				exit(1);
-			}
+			$apiContext = self::createContext();
+			$payment->create($apiContext);
 
 			return $payment;
 		}
 
 		/**
-		 * Given a `$payment_token` and `$payer_id`, this function
+		 * Given a `$payment_id` and `$payer_id`, this function
 		 * will complete the PayPal transaction that has already been
 		 * approved and return the Payment response
 		 *
-		 * @param string $payment_token
+		 * @param string $payment_id
 		 * @param string $payer_id
 		 * @return Payment
 		 */
-		public function completeCheckout($payment_token, $payer_id) {
+		public function completeCheckout($payment_id, $payer_id) {
 			$apiContext = self::createContext();
 
-			$payment = new Payment($payment_token);
+			$payment = Payment::get($payment_id, $apiContext);
 			$execution = new PaymentExecution();
-			$execution->setPayer_id($payer_id);
+			$execution->setPayerId($payer_id);
 			$payment->execute($execution, $apiContext);
 
 			return $payment;
