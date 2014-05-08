@@ -365,9 +365,9 @@
 			$payment = Payment::get($payment_id, $apiContext);
 			$execution = new PaymentExecution();
 			$execution->setPayerId($payer_id);
-			$payment->execute($execution, $apiContext);
+			$response = $payment->execute($execution, $apiContext);
 
-			return $payment;
+			return $response;
 		}
 
 	}
