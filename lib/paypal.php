@@ -1,11 +1,12 @@
 <?php
-	
+
 	require_once __DIR__ . '/bootstrap.php';
-	
+
 	use PayPal\Rest\ApiContext;
 	use PayPal\Auth\OAuthTokenCredential;
 	use PayPal\Api\Address;
 	use PayPal\Api\Amount;
+	use PayPal\Api\Details;
 	use PayPal\Api\Payer;
 	use PayPal\Api\Payment;
 	use PayPal\Api\PaymentExecution;
@@ -137,7 +138,7 @@
 					'message' => $ex->getMessage()
 				);
 				if(isset($error->details)) {
-					$attributes['details'] = $error->details[0]['issue'];
+					$attributes['details'] = $error->details[0]->issue;
 				}
 
 				// Add to XML;
@@ -301,20 +302,30 @@
 		 *
 		 * @see completeCheckout
 		 * @param string $checkout_amount
+		 * @param string $taxes_amount
 		 * @param string $checkout_description (optional)
 		 * @param RedirectUrls $redirects
 		 * @param ItemList $items
 		 * @return Payment
 		 */
-		public static function prepareCheckout($checkout_amount, $checkout_description = null, RedirectUrls $redirects, ItemList $items) {
+		public static function prepareCheckout($checkout_amount, $taxes_amount, $checkout_description = null, RedirectUrls $redirects, ItemList $items) {
 			$payer = new Payer();
 			$payer->setPayment_method("paypal");
 
 			// ### Amount
 			// Let's you specify a payment amount.
+			$checkout_amount = number_format((float)$checkout_amount, 2);
+			$taxes_amount = number_format((float)$taxes_amount, 2);
+			$total = number_format($checkout_amount + $taxes_amount, 2);
+
+			$amount_details = new Details();
+			$amount_details->setTax($taxes_amount);
+			$amount_details->setSubtotal($checkout_amount);
+
 			$amount = new Amount();
 			$amount->setCurrency(self::getConfigValue('currency'));
-			$amount->setTotal(number_format((float)$checkout_amount, 2));
+			$amount->setTotal($total);
+			$amount->setDetails($amount_details);
 
 			// ### Transaction
 			// A transaction defines the contract of a
