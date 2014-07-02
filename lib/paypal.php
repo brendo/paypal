@@ -244,7 +244,7 @@
 			if(!is_null($sku)) $item->setSku($sku);
 			if(!is_null($name)) $item->setName($name);
 			if(!is_null($quantity)) $item->setQuantity($quantity);
-			if(!is_null($price)) $item->setPrice(number_format((float)$price, 2));
+			if(!is_null($price)) $item->setPrice(number_format((float)$price, 2, '.', ''));
 
 			return $item;
 		}
@@ -314,9 +314,9 @@
 
 			// ### Amount
 			// Let's you specify a payment amount.
-			$checkout_amount = number_format((float)$checkout_amount, 2);
-			$taxes_amount = number_format((float)$taxes_amount, 2);
-			$total = number_format($checkout_amount + $taxes_amount, 2);
+			$checkout_amount = number_format((float)$checkout_amount, 2, '.', '');
+			$taxes_amount = number_format((float)$taxes_amount, 2, '.', '');
+			$total = number_format($checkout_amount + $taxes_amount, 2, '.', '');
 
 			$amount_details = new Details();
 			$amount_details->setTax($taxes_amount);
