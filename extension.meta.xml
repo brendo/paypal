@@ -16,7 +16,12 @@
 		</author>
 	</authors>
 	<releases>
-		<release version="0.2" date="2014-04-29" min="2.4">
+		<release version="0.3" date="2014-07-02" min="2.4">
+			- Handle taxes
+			- Fix number formatting issues for amounts over $1000
+			- Return full response instead of just payment details
+		</release>
+		<release version="0.2" date="2014-05-29" min="2.4">
 			- Update to use PayPal's REST SDK
 			- Symphony 2.4 compatibility
 		</release>
